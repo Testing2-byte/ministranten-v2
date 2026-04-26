@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Ministranten</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F6F6F7;
+      --sur: #FFFFFF;
+      --tx: #111113;
+      --tx2: #52525B;
+      --ac: #2563EB;
+      --gr: #16A34A;
+      --rd: #DC2626;
+      --fn: 'Inter', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--fn);
+      background: var(--bg);
+      color: var(--tx);
+      padding: 20px;
+    }
+
+    .admin-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    h1 { font-size: 28px; }
+
+    button {
+      padding: 8px 16px;
+      background: var(--ac);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.danger {
+      background: var(--rd);
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .card {
+      background: var(--sur);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      font-family: var(--fn);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    th {
+      font-weight: 600;
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .message.success {
+      background: #F0FDF4;
+      color: var(--gr);
+    }
+
+    .message.error {
+      background: #FEF2F2;
+      color: var(--rd);
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="header">
+      <h1>👨‍💼 Admin Panel</h1>
+      <button onclick="logout()">Abmelden</button>
+    </div>
+
+    <div id="message"></div>
+
+    <div class="card">
+      <h2>Neuer Benutzer</h2>
+      <form id="create-user-form">
+        <div class="form-group">
+          <label for="new-username">Benutzername</label>
+          <input type="text" id="new-username" required>
+        </div>
+        <div class="form-group">
+          <label for="new-password">Passwort (mindestens 8 Zeichen)</label>
+          <input type="password" id="new-password" required minlength="8">
+        </div>
+        <button type="submit">Benutzer erstellen</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Alle Benutzer</h2>
+      <table id="users-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Erstellt</th>
+            <th>Passwort erzwingen</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="4" style="text-align: center; color: var(--tx2);">Laden...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      window.location.href = "/";
+    }
+
+    async function loadUsers() {
+      try {
+        const response = await fetch("/api/admin/users", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) throw new Error("Fehler beim Laden");
+
+        const users = await response.json();
+        const tbody = document.getElementById("users-tbody");
+        tbody.innerHTML = users
+          .map(
+            (u) => `
+          <tr>
+            <td><strong>${u.username}</strong></td>
+            <td>${new Date(u.created_at).toLocaleDateString("de-DE")}</td>
+            <td>${u.force_password_change ? "✓ Ja" : "✗ Nein"}</td>
+            <td>
+              <div class="actions">
+                <button class="danger" onclick="deleteUser(${u.id})">Löschen</button>
+              </div>
+            </td>
+          </tr>
+        `
+          )
+          .join("");
+      } catch (err) {
+        showMessage("Fehler beim Laden der Benutzer", "error");
+      }
+    }
+
+    document.getElementById("create-user-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("new-username").value;
+      const password = document.getElementById("new-password").value;
+
+      try {
+        const response = await fetch("/api/admin/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error);
+        }
+
+        showMessage("Benutzer erfolgreich erstellt", "success");
+        document.getElementById("create-user-form").reset();
+        loadUsers();
+      } catch (err) {
+        showMessage(err.message, "error");
+      }
+    });
+
+    async function deleteUser(id) {
+      if (!confirm("Sicher löschen?")) return;
+
+      try {
+        const response = await fetch(`/api/admin/users/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) throw new Error("Fehler");
+        showMessage("Benutzer gelöscht", "success");
+        loadUsers();
+      } catch (err) {
+        showMessage("Fehler beim Löschen", "error");
+      }
+    }
+
+    function showMessage(msg, type) {
+      const div = document.getElementById("message");
+      div.className = `message ${type}`;
+      div.textContent = msg;
+      setTimeout(() => {
+        div.className = "";
+        div.textContent = "";
+      }, 3000);
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/";
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>

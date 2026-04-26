@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="description" content="Ministrantenverwaltung der Pfarrei St. Raphael">
+  <meta name="apple-mobile-web-app-title" content="Ministranten">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝</text></svg>">
+  <meta name="theme-color" content="#1D4ED8">
+  <title>Ministranten · St. Raphael</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F6F6F7;
+      --sur: #FFFFFF;
+      --tx: #111113;
+      --tx2: #52525B;
+      --tx3: #A1A1AA;
+      --ac: #2563EB;
+      --ach: #1D4ED8;
+      --rd: #DC2626;
+      --fn: 'Inter', system-ui, sans-serif;
+      --r: 8px;
+    }
+    .dark {
+      --bg: #0E0E11;
+      --sur: #17171C;
+      --tx: #EDEDF0;
+      --tx2: #9898A4;
+      --ac: #3B82F6;
+      --ach: #2563EB;
+      --rd: #EF4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--fn);
+      background: var(--bg);
+      color: var(--tx);
+      min-height: 100vh;
+    }
+
+    #app { display: none; }
+    #app.visible { display: block; }
+    #login, #change-password, #app { display: none; }
+    #login.active, #change-password.active, #app.active { display: flex; }
+
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 100%);
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: var(--sur);
+      border-radius: var(--r);
+      padding: 40px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14);
+    }
+
+    .auth-card h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: var(--r);
+      font-size: 14px;
+      font-family: var(--fn);
+      background: var(--bg);
+      color: var(--tx);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--ac);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: var(--ac);
+      color: white;
+      border: none;
+      border-radius: var(--r);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background: var(--ach);
+    }
+
+    .error {
+      color: var(--rd);
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    .success {
+      color: #16A34A;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    #app {
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+  <!-- LOGIN SCREEN -->
+  <div id="login" class="active">
+    <div class="auth-container">
+      <div class="auth-card">
+        <h1>✝ Ministranten</h1>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="username">Benutzername</label>
+            <input type="text" id="username" placeholder="admin" required>
+            <div class="error" id="login-error"></div>
+          </div>
+          <div class="form-group">
+            <label for="password">Passwort</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+          </div>
+          <button type="submit">Anmelden</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASSWORD CHANGE SCREEN -->
+  <div id="change-password">
+    <div class="auth-container">
+      <div class="auth-card">
+        <h1>🔐 Passwort ändern</h1>
+        <p style="text-align: center; margin-bottom: 30px; color: var(--tx2); font-size: 14px;">
+          Dies ist Ihr erstes Login. Bitte ändern Sie Ihr Passwort.
+        </p>
+        <form id="change-password-form">
+          <div class="form-group">
+            <label for="current-password">Aktuelles Passwort</label>
+            <input type="password" id="current-password" placeholder="••••••••" required>
+            <div class="error" id="pwd-error"></div>
+          </div>
+          <div class="form-group">
+            <label for="new-password">Neues Passwort</label>
+            <input type="password" id="new-password" placeholder="••••••••" required minlength="8">
+            <div class="error" id="pwd-error2"></div>
+          </div>
+          <div class="form-group">
+            <label for="confirm-password">Passwort bestätigen</label>
+            <input type="password" id="confirm-password" placeholder="••••••••" required>
+          </div>
+          <button type="submit">Passwort ändern</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app">
+    <p>App wird geladen...</p>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

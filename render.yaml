@@ -1,0 +1,12 @@
+server:
+  build:
+    dir: server
+    env: node
+  startCommand: node server/server.js
+  envVars:
+    - key: DATABASE_URL
+      value: ${DATABASE_URL}
+    - key: JWT_SECRET
+      generateValue: true
+    - key: NODE_ENV
+      value: production
