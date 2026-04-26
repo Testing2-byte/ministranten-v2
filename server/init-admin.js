@@ -14,6 +14,7 @@ dotenv.config();
 async function createAdmin(username, password) {
   try {
     // Datenbank initialisieren
+    console.log("DEBUG: DATABASE_URL in init-admin.js:", process.env.DATABASE_URL ? "Set" : "Not Set", process.env.DATABASE_URL);
     await initializeDatabase();
 
     if (!username || !password) {
